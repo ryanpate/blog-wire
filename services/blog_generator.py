@@ -66,28 +66,40 @@ class BlogGenerator:
         return f"""Write a comprehensive, SEO-optimized blog post about: "{keyword}"
 
 Requirements:
-- Word count: {min_words}-{max_words} words
-- Tone: Conversational, friendly, and engaging
-- Style: Long-form, informative, well-structured
+- Word count: {min_words}-{max_words} words (IMPORTANT: Ensure the content is substantial and meets this requirement)
+- Tone: Conversational, friendly, and personable - write as Ryan Pate speaking directly to readers
+- Style: Long-form, informative, well-structured with deep insights
+- Use first-person perspective ("I", "my experience", etc.) to make it personal
 - Include relevant headers (H2, H3) for better readability
-- Naturally incorporate the keyword throughout
-- Add value with actionable insights and examples
-- Write in a way that keeps readers engaged
+- Naturally incorporate long-tail SEO keywords throughout
+- Add real value with actionable insights, examples, and personal observations
+- End with a signature: "- Ryan Pate"
+
+SEO Focus:
+- Use long-form keywords (e.g., "how to invest in cryptocurrency for beginners" not just "crypto")
+- Include semantic keywords and related terms
+- Front-load important keywords in title and first paragraph
+- Use natural language that people actually search for
 
 Structure your response EXACTLY as follows:
 
-TITLE: [Compelling, SEO-friendly title]
+TITLE: [Compelling, SEO-friendly title with long-tail keywords]
 
-META_DESCRIPTION: [150-160 character meta description]
+META_DESCRIPTION: [150-160 character meta description with primary keyword]
 
-META_KEYWORDS: [5-7 relevant keywords, comma-separated]
+META_KEYWORDS: [5-7 long-form keywords, comma-separated - focus on phrases people search]
 
-EXCERPT: [2-3 sentence excerpt/summary]
+EXCERPT: [2-3 sentence compelling excerpt that includes main keyword]
 
 CONTENT:
 [Full blog post content in Markdown format with headers, lists, and formatting]
 
-Remember: Write naturally and conversationally as if explaining to a friend. Make it engaging and valuable!"""
+IMPORTANT:
+- End the blog post with a conversational closing paragraph
+- Sign off with: "- Ryan Pate"
+- Write as if Ryan is sharing personal insights and expertise
+- Make it feel authentic and relatable, not corporate or robotic
+- Ensure content is truly {min_words}-{max_words} words - no shorter!"""
 
     def _parse_blog_content(self, content, keyword):
         """Parse the structured blog content from GPT response"""
