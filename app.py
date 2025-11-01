@@ -220,6 +220,44 @@ def api_affiliate_links():
         } for l in links])
 
 
+@app.route('/api/posts/<int:post_id>', methods=['DELETE'])
+def api_delete_post(post_id):
+    """Delete a blog post by ID"""
+    post = BlogPost.query.get(post_id)
+
+    if not post:
+        return jsonify({'success': False, 'message': f'Post {post_id} not found'}), 404
+
+    title = post.title
+    db.session.delete(post)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'Post "{title}" deleted successfully'
+    })
+
+
+@app.route('/api/posts/delete-empty', methods=['POST'])
+def api_delete_empty_posts():
+    """Delete all posts with 0 word count"""
+    empty_posts = BlogPost.query.filter_by(word_count=0).all()
+
+    if not empty_posts:
+        return jsonify({'success': True, 'message': 'No empty posts found', 'deleted': 0})
+
+    count = len(empty_posts)
+    for post in empty_posts:
+        db.session.delete(post)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'Deleted {count} empty post(s)',
+        'deleted': count
+    })
+
+
 # ============================================================
 # TEMPLATE FILTERS
 # ============================================================
