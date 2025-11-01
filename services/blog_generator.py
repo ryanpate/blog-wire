@@ -47,7 +47,7 @@ class BlogGenerator:
                     }
                 ],
                 temperature=0.7,
-                max_tokens=4096
+                max_tokens=16384  # Increased to support 2000-3500 word blog posts
             )
 
             content = response.choices[0].message.content
@@ -113,28 +113,52 @@ IMPORTANT:
             'word_count': 0
         }
 
-        # Extract title
-        title_match = re.search(r'TITLE:\s*(.+?)(?:\n|$)', content)
+        # Extract title - handle both "TITLE:" and "**TITLE:**" formats
+        title_match = re.search(r'\*\*TITLE:\*\*\s*(.+?)(?:\n|$)', content)
+        if not title_match:
+            title_match = re.search(r'TITLE:\s*(.+?)(?:\n|$)', content)
         if title_match:
             data['title'] = title_match.group(1).strip()
 
-        # Extract meta description
-        meta_desc_match = re.search(r'META_DESCRIPTION:\s*(.+?)(?:\n|$)', content)
+        # Extract meta description - handle both formats
+        meta_desc_match = re.search(r'\*\*META_DESCRIPTION:\*\*\s*(.+?)(?:\n|$)', content)
+        if not meta_desc_match:
+            meta_desc_match = re.search(r'META_DESCRIPTION:\s*(.+?)(?:\n|$)', content)
         if meta_desc_match:
             data['meta_description'] = meta_desc_match.group(1).strip()
 
-        # Extract meta keywords
-        meta_keywords_match = re.search(r'META_KEYWORDS:\s*(.+?)(?:\n|$)', content)
+        # Extract meta keywords - handle both formats
+        meta_keywords_match = re.search(r'\*\*META_KEYWORDS:\*\*\s*(.+?)(?:\n|$)', content)
+        if not meta_keywords_match:
+            meta_keywords_match = re.search(r'META_KEYWORDS:\s*(.+?)(?:\n|$)', content)
         if meta_keywords_match:
             data['meta_keywords'] = meta_keywords_match.group(1).strip()
 
-        # Extract excerpt
-        excerpt_match = re.search(r'EXCERPT:\s*(.+?)(?:\n\n|CONTENT:)', content, re.DOTALL)
+        # Extract excerpt - handle both formats
+        excerpt_match = re.search(r'\*\*EXCERPT:\*\*\s*(.+?)(?:\n\n|---|\*\*CONTENT)', content, re.DOTALL)
+        if not excerpt_match:
+            excerpt_match = re.search(r'EXCERPT:\s*(.+?)(?:\n\n|CONTENT:|---)', content, re.DOTALL)
         if excerpt_match:
             data['excerpt'] = excerpt_match.group(1).strip()
 
-        # Extract content
+        # Extract content - handle multiple formats
+        # Try "CONTENT:" label first
         content_match = re.search(r'CONTENT:\s*(.+?)$', content, re.DOTALL)
+
+        # If not found, try content after "---" separator
+        if not content_match:
+            content_match = re.search(r'---\s*\n\n(.+?)$', content, re.DOTALL)
+
+        # If still not found, try content after EXCERPT
+        if not content_match and data['excerpt']:
+            # Find where excerpt ends and take everything after
+            excerpt_end = content.find(data['excerpt']) + len(data['excerpt'])
+            remaining = content[excerpt_end:]
+            # Skip past any separators
+            separator_match = re.search(r'---\s*\n\n(.+?)$', remaining, re.DOTALL)
+            if separator_match:
+                content_match = separator_match
+
         if content_match:
             data['content'] = content_match.group(1).strip()
 
