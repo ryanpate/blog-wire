@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - {{ config.BLOG_NAME }}{% endblock %}
+
+{% block meta %}
+<meta name="description" content="{{ post.meta_description or post.excerpt }}">
+<meta name="keywords" content="{{ post.meta_keywords }}">
+{% endblock %}
+
+{% block og_meta %}
+<meta property="og:title" content="{{ post.title }}">
+<meta property="og:description" content="{{ post.meta_description or post.excerpt }}">
+<meta property="og:url" content="https://{{ config.BLOG_DOMAIN }}/blog/{{ post.slug }}">
+<meta property="og:type" content="article">
+{% if post.featured_image_url %}
+<meta property="og:image" content="{{ post.featured_image_url }}">
+{% endif %}
+<meta property="article:published_time" content="{{ post.published_at.isoformat() }}">
+{% endblock %}
+
+{% block head_extra %}
+<!-- Schema.org JSON-LD -->
+<script type="application/ld+json">
+{{ schema_markup|safe }}
+</script>
+{% endblock %}
+
+{% block content %}
+<article class="blog-post">
+    <header class="post-header">
+        <h1 class="post-title">{{ post.title }}</h1>
+
+        <div class="post-meta">
+            <time datetime="{{ post.published_at.isoformat() }}">
+                {{ post.published_at|format_date }}
+            </time>
+            <span class="separator">•</span>
+            <span class="reading-time">{{ post.word_count|reading_time }}</span>
+            <span class="separator">•</span>
+            <span class="view-count">{{ post.view_count }} views</span>
+        </div>
+    </header>
+
+    {% if config.ADSENSE_ENABLED %}
+    <!-- AdSense In-Article Ad -->
+    <div class="ad-container ad-in-article">
+        <ins class="adsbygoogle"
+             style="display:block; text-align:center;"
+             data-ad-layout="in-article"
+             data-ad-format="fluid"
+             data-ad-client="{{ config.ADSENSE_CLIENT_ID }}"
+             data-ad-slot="YOUR_IN_ARTICLE_AD_SLOT"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </div>
+    {% endif %}
+
+    <div class="post-content">
+        {{ html_content|safe }}
+    </div>
+
+    {% if config.ADSENSE_ENABLED %}
+    <!-- AdSense Bottom Ad -->
+    <div class="ad-container ad-bottom">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="{{ config.ADSENSE_CLIENT_ID }}"
+             data-ad-slot="YOUR_BOTTOM_AD_SLOT"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </div>
+    {% endif %}
+
+    <footer class="post-footer">
+        <div class="post-tags">
+            {% if post.meta_keywords %}
+                {% for keyword in post.meta_keywords.split(',') %}
+                <span class="tag">{{ keyword.strip() }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="post-navigation">
+            <a href="/" class="back-home">← Back to Home</a>
+        </div>
+    </footer>
+</article>
+{% endblock %}

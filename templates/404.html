@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Page Not Found - {{ config.BLOG_NAME }}{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <h1 class="error-code">404</h1>
+    <h2>Page Not Found</h2>
+    <p>Sorry, the page you're looking for doesn't exist.</p>
+    <a href="/" class="btn">Go Home</a>
+</div>
+{% endblock %}

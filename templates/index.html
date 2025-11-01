@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}{{ config.BLOG_NAME }} - Latest Trending Topics{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Welcome to {{ config.BLOG_NAME }}</h1>
+    <p class="hero-subtitle">Your source for trending topics and insightful content</p>
+</div>
+
+<div class="blog-grid">
+    {% if posts.items %}
+        {% for post in posts.items %}
+        <article class="blog-card">
+            <div class="blog-card-content">
+                <h2 class="blog-card-title">
+                    <a href="{{ url_for('blog_post', slug=post.slug) }}">{{ post.title }}</a>
+                </h2>
+
+                <div class="blog-card-meta">
+                    <span class="post-date">{{ post.published_at|format_date }}</span>
+                    <span class="reading-time">{{ post.word_count|reading_time }}</span>
+                </div>
+
+                <p class="blog-card-excerpt">{{ post.excerpt }}</p>
+
+                <a href="{{ url_for('blog_post', slug=post.slug) }}" class="read-more">
+                    Read More →
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    {% else %}
+        <div class="no-posts">
+            <p>No posts yet. Check back soon!</p>
+        </div>
+    {% endif %}
+</div>
+
+{% if posts.pages > 1 %}
+<nav class="pagination">
+    {% if posts.has_prev %}
+        <a href="?page={{ posts.prev_num }}" class="page-link">&larr; Previous</a>
+    {% endif %}
+
+    <span class="page-info">Page {{ posts.page }} of {{ posts.pages }}</span>
+
+    {% if posts.has_next %}
+        <a href="?page={{ posts.next_num }}" class="page-link">Next &rarr;</a>
+    {% endif %}
+</nav>
+{% endif %}
+
+{% if config.ADSENSE_ENABLED %}
+<!-- AdSense Ad Unit -->
+<div class="ad-container">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="{{ config.ADSENSE_CLIENT_ID }}"
+         data-ad-slot="YOUR_AD_SLOT_ID"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+</div>
+{% endif %}
+{% endblock %}

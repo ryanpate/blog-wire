@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% block meta %}
+    <meta name="description" content="Blog Wire - Trending topics and insights">
+    <meta name="keywords" content="blog, trending, news, insights">
+    {% endblock %}
+
+    <title>{% block title %}Blog Wire - Trending Topics & Insights{% endblock %}</title>
+
+    <!-- SEO -->
+    <link rel="canonical" href="https://{{ config.BLOG_DOMAIN }}{{ request.path }}">
+    <meta property="og:site_name" content="{{ config.BLOG_NAME }}">
+    <meta property="og:type" content="website">
+
+    {% block og_meta %}{% endblock %}
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    {% if config.ADSENSE_ENABLED and config.ADSENSE_CLIENT_ID %}
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ config.ADSENSE_CLIENT_ID }}"
+            crossorigin="anonymous"></script>
+    {% endif %}
+
+    {% block head_extra %}{% endblock %}
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <nav class="navbar">
+                <a href="/" class="logo">{{ config.BLOG_NAME }}</a>
+                <ul class="nav-menu">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/api/stats">Stats</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2025 {{ config.BLOG_NAME }}. All rights reserved.</p>
+            <p class="footer-note">Powered by AI-generated content</p>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
