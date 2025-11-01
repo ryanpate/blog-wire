@@ -73,7 +73,7 @@ def main():
 
     logger.info("Scheduled jobs:")
     for job in scheduler.get_jobs():
-        logger.info(f"  - {job.name} (next run: {job.next_run_time})")
+        logger.info(f"  - {job.name}")
 
     # Optional: Run once immediately on startup
     logger.info("\nRunning initial blog generation...")
