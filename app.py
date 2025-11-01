@@ -258,6 +258,62 @@ def api_delete_empty_posts():
     })
 
 
+@app.route('/api/posts/import', methods=['POST'])
+def api_import_posts():
+    """Import blog posts from JSON file"""
+    try:
+        with open('blog_posts_export.json', 'r') as f:
+            posts_data = json.load(f)
+
+        imported_count = 0
+        skipped_count = 0
+
+        for post_data in posts_data:
+            # Check if post with this slug already exists
+            existing = BlogPost.query.filter_by(slug=post_data['slug']).first()
+
+            if existing:
+                skipped_count += 1
+                continue
+
+            # Create new post
+            post = BlogPost(
+                title=post_data['title'],
+                slug=post_data['slug'],
+                content=post_data['content'],
+                excerpt=post_data['excerpt'],
+                meta_description=post_data['meta_description'],
+                meta_keywords=post_data['meta_keywords'],
+                word_count=post_data['word_count'],
+                status=post_data['status'],
+                published_at=datetime.fromisoformat(post_data['published_at']) if post_data['published_at'] else None
+            )
+
+            db.session.add(post)
+            imported_count += 1
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Imported {imported_count} posts, skipped {skipped_count} existing',
+            'imported': imported_count,
+            'skipped': skipped_count
+        })
+
+    except FileNotFoundError:
+        return jsonify({
+            'success': False,
+            'message': 'blog_posts_export.json not found'
+        }), 404
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error importing posts: {str(e)}'
+        }), 500
+
+
 # ============================================================
 # TEMPLATE FILTERS
 # ============================================================
