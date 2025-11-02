@@ -321,6 +321,30 @@ def api_delete_empty_posts():
     })
 
 
+@app.route('/api/migrate-schema', methods=['POST'])
+def api_migrate_schema():
+    """Run database schema migration for PostgreSQL"""
+    from sqlalchemy import text
+
+    try:
+        # Alter the columns to increase length
+        db.session.execute(text('ALTER TABLE blog_posts ALTER COLUMN meta_description TYPE VARCHAR(500)'))
+        db.session.execute(text('ALTER TABLE blog_posts ALTER COLUMN meta_keywords TYPE VARCHAR(500)'))
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Database schema updated successfully'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Schema migration failed: {str(e)}'
+        }), 500
+
+
 @app.route('/api/posts/import', methods=['POST'])
 def api_import_posts():
     """Import blog posts from JSON file"""
