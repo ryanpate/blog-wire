@@ -33,3 +33,8 @@ class Config:
     # Affiliate links
     AFFILIATE_KEYWORDS = os.getenv('AFFILIATE_KEYWORDS', 'amazon,product,buy,shop,review').split(',')
     AFFILIATE_LINKS = json.loads(os.getenv('AFFILIATE_LINKS', '{}'))
+
+    # SEO & Google Search Console
+    GOOGLE_SITE_VERIFICATION = os.getenv('GOOGLE_SITE_VERIFICATION', '')
+    SITE_AUTHOR = os.getenv('SITE_AUTHOR', 'Ryan Pate')
+    SITE_TWITTER = os.getenv('SITE_TWITTER', '')  # Twitter handle without @

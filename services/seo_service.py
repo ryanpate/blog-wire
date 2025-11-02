@@ -70,14 +70,16 @@ class SEOService:
             "headline": blog_post.title,
             "description": blog_post.meta_description or blog_post.excerpt,
             "datePublished": blog_post.published_at.isoformat() if blog_post.published_at else None,
-            "dateModified": blog_post.updated_at.isoformat() if blog_post.updated_at else None,
+            "dateModified": blog_post.updated_at.isoformat() if blog_post.updated_at else blog_post.published_at.isoformat() if blog_post.published_at else None,
             "author": {
-                "@type": "Organization",
-                "name": Config.BLOG_NAME
+                "@type": "Person",
+                "name": Config.SITE_AUTHOR,
+                "url": f"https://{Config.BLOG_DOMAIN}"
             },
             "publisher": {
                 "@type": "Organization",
                 "name": Config.BLOG_NAME,
+                "url": f"https://{Config.BLOG_DOMAIN}",
                 "logo": {
                     "@type": "ImageObject",
                     "url": f"https://{Config.BLOG_DOMAIN}/static/logo.png"
@@ -86,13 +88,86 @@ class SEOService:
             "mainEntityOfPage": {
                 "@type": "WebPage",
                 "@id": f"https://{Config.BLOG_DOMAIN}/blog/{blog_post.slug}"
-            }
+            },
+            "wordCount": blog_post.word_count
         }
 
+        # Add image if available
         if blog_post.featured_image_url:
-            schema["image"] = blog_post.featured_image_url
+            schema["image"] = {
+                "@type": "ImageObject",
+                "url": blog_post.featured_image_url,
+                "width": 1200,
+                "height": 630
+            }
+
+        # Add keywords/tags if available
+        if blog_post.meta_keywords:
+            keywords = [k.strip() for k in blog_post.meta_keywords.split(',')]
+            schema["keywords"] = keywords
 
         return schema
+
+    def generate_breadcrumb_schema(self, blog_post):
+        """
+        Generate breadcrumb schema for article pages
+
+        Args:
+            blog_post: BlogPost model instance
+
+        Returns:
+            dict: Schema.org BreadcrumbList markup
+        """
+        from config import Config
+
+        return {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": f"https://{Config.BLOG_DOMAIN}/"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": blog_post.title,
+                    "item": f"https://{Config.BLOG_DOMAIN}/blog/{blog_post.slug}"
+                }
+            ]
+        }
+
+    def generate_website_schema(self):
+        """
+        Generate website schema for homepage
+
+        Returns:
+            dict: Schema.org WebSite markup
+        """
+        from config import Config
+
+        return {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": Config.BLOG_NAME,
+            "url": f"https://{Config.BLOG_DOMAIN}",
+            "description": "Trending topics and insights from around the web",
+            "publisher": {
+                "@type": "Organization",
+                "name": Config.BLOG_NAME,
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": f"https://{Config.BLOG_DOMAIN}/static/logo.png"
+                }
+            },
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": f"https://{Config.BLOG_DOMAIN}/?s={{search_term_string}}",
+                "query-input": "required name=search_term_string"
+            }
+        }
 
     def calculate_seo_score(self, blog_post):
         """

@@ -51,7 +51,14 @@ def index():
         BlogPost.published_at.desc()
     ).paginate(page=page, per_page=per_page, error_out=False)
 
-    return render_template('index.html', posts=posts)
+    # Generate website schema for homepage
+    website_schema = seo_service.generate_website_schema()
+
+    return render_template(
+        'index.html',
+        posts=posts,
+        website_schema=json.dumps(website_schema)
+    )
 
 
 @app.route('/blog/<slug>')
@@ -70,7 +77,14 @@ def blog_post(slug):
     )
 
     # Generate schema markup for SEO
-    schema_markup = seo_service.generate_schema_markup(post)
+    article_schema = seo_service.generate_schema_markup(post)
+    breadcrumb_schema = seo_service.generate_breadcrumb_schema(post)
+
+    # Combine schemas into a graph
+    schema_markup = {
+        "@context": "https://schema.org",
+        "@graph": [article_schema, breadcrumb_schema]
+    }
 
     return render_template(
         'blog_post.html',
@@ -88,9 +102,14 @@ def sitemap():
     sitemap_xml = ['<?xml version="1.0" encoding="UTF-8"?>']
     sitemap_xml.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
 
-    # Homepage
+    # Homepage - use the most recent post date as lastmod
     sitemap_xml.append('<url>')
     sitemap_xml.append(f'  <loc>https://{Config.BLOG_DOMAIN}/</loc>')
+    if posts:
+        latest_post = max(posts, key=lambda p: p.updated_at or p.published_at or datetime.min)
+        latest_date = latest_post.updated_at or latest_post.published_at
+        if latest_date:
+            sitemap_xml.append(f'  <lastmod>{latest_date.strftime("%Y-%m-%d")}</lastmod>')
     sitemap_xml.append('  <changefreq>daily</changefreq>')
     sitemap_xml.append('  <priority>1.0</priority>')
     sitemap_xml.append('</url>')
@@ -99,8 +118,10 @@ def sitemap():
     for post in posts:
         sitemap_xml.append('<url>')
         sitemap_xml.append(f'  <loc>https://{Config.BLOG_DOMAIN}/blog/{post.slug}</loc>')
-        if post.updated_at:
-            sitemap_xml.append(f'  <lastmod>{post.updated_at.strftime("%Y-%m-%d")}</lastmod>')
+        # Use updated_at if available, otherwise published_at
+        lastmod = post.updated_at or post.published_at
+        if lastmod:
+            sitemap_xml.append(f'  <lastmod>{lastmod.strftime("%Y-%m-%d")}</lastmod>')
         sitemap_xml.append('  <changefreq>monthly</changefreq>')
         sitemap_xml.append('  <priority>0.8</priority>')
         sitemap_xml.append('</url>')
@@ -118,6 +139,12 @@ Allow: /
 Sitemap: https://{Config.BLOG_DOMAIN}/sitemap.xml
 """
     return robots_txt, 200, {'Content-Type': 'text/plain'}
+
+
+@app.route('/google<verification_code>.html')
+def google_verification(verification_code):
+    """Google Search Console HTML file verification"""
+    return f'google-site-verification: google{verification_code}.html', 200, {'Content-Type': 'text/html'}
 
 
 # ============================================================

@@ -8,14 +8,33 @@
 {% endblock %}
 
 {% block og_meta %}
+<!-- Open Graph Article -->
 <meta property="og:title" content="{{ post.title }}">
 <meta property="og:description" content="{{ post.meta_description or post.excerpt }}">
 <meta property="og:url" content="https://{{ config.BLOG_DOMAIN }}/blog/{{ post.slug }}">
 <meta property="og:type" content="article">
 {% if post.featured_image_url %}
 <meta property="og:image" content="{{ post.featured_image_url }}">
+<meta property="og:image:alt" content="{{ post.title }}">
 {% endif %}
 <meta property="article:published_time" content="{{ post.published_at.isoformat() }}">
+{% if post.updated_at %}
+<meta property="article:modified_time" content="{{ post.updated_at.isoformat() }}">
+{% endif %}
+<meta property="article:author" content="{{ config.SITE_AUTHOR }}">
+{% if post.meta_keywords %}
+{% for keyword in post.meta_keywords.split(',')[:5] %}
+<meta property="article:tag" content="{{ keyword.strip() }}">
+{% endfor %}
+{% endif %}
+
+<!-- Twitter Card -->
+<meta name="twitter:title" content="{{ post.title }}">
+<meta name="twitter:description" content="{{ post.meta_description or post.excerpt }}">
+{% if post.featured_image_url %}
+<meta name="twitter:image" content="{{ post.featured_image_url }}">
+<meta name="twitter:image:alt" content="{{ post.title }}">
+{% endif %}
 {% endblock %}
 
 {% block head_extra %}
