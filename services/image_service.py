@@ -15,11 +15,19 @@ class ImageService:
         self.dalle_quality = Config.DALLE_QUALITY
         self.placeholder_url = Config.IMAGE_PLACEHOLDER_URL
 
+        logger.info(f"ImageService init: DALLE_ENABLED={self.dalle_enabled}, has_api_key={bool(Config.OPENAI_API_KEY)}")
+
         # Initialize OpenAI client only if DALL-E is enabled
         if self.dalle_enabled and Config.OPENAI_API_KEY:
-            self.openai_client = OpenAI(api_key=Config.OPENAI_API_KEY)
+            try:
+                self.openai_client = OpenAI(api_key=Config.OPENAI_API_KEY)
+                logger.info("✅ OpenAI client initialized successfully for DALL-E")
+            except Exception as e:
+                logger.error(f"Failed to initialize OpenAI client: {e}")
+                self.openai_client = None
         else:
             self.openai_client = None
+            logger.warning(f"OpenAI client NOT initialized (dalle_enabled={self.dalle_enabled}, has_key={bool(Config.OPENAI_API_KEY)})")
 
     def get_featured_image(self, title, keywords=None):
         """
@@ -43,6 +51,7 @@ class ImageService:
             return image_url
 
         # Fallback to DALL-E if enabled
+        logger.info(f"Checking DALL-E fallback: dalle_enabled={self.dalle_enabled}, has_client={bool(self.openai_client)}")
         if self.dalle_enabled and self.openai_client:
             logger.info("Unsplash search failed. Trying DALL-E...")
             image_url = self._generate_dalle_image(title)
@@ -50,6 +59,8 @@ class ImageService:
             if image_url:
                 logger.info(f"✅ Generated DALL-E image: {image_url}")
                 return image_url
+        else:
+            logger.warning(f"Skipping DALL-E: dalle_enabled={self.dalle_enabled}, has_client={bool(self.openai_client)}")
 
         # Final fallback to placeholder
         logger.warning(f"No image found for '{title}'. Using placeholder.")
