@@ -1,4 +1,4 @@
-from pytrends.request import TrendReq
+from trendspy import Trends
 import time
 from datetime import datetime
 from models import TrendingTopic, db
@@ -8,64 +8,54 @@ logger = logging.getLogger(__name__)
 
 
 class TrendsService:
-    """Service to fetch trending topics from Google Trends"""
+    """Service to fetch trending topics from Google Trends using trendspy"""
 
     def __init__(self):
-        self.pytrends = TrendReq(hl='en-US', tz=360)
+        self.trends = Trends()
 
-    def get_trending_topics(self, count=10, region='united_states'):
+    def get_trending_topics(self, count=10, region='US'):
         """
-        Fetch trending topics from Google Trends
+        Fetch trending topics from Google Trends using trendspy
 
         Args:
             count: Number of trending topics to retrieve
-            region: Geographic region for trends
+            region: Geographic region for trends (e.g., 'US', 'GB', 'CA')
 
         Returns:
             list: List of trending topic dictionaries
         """
         try:
-            # Get trending searches
-            trending_df = self.pytrends.trending_searches(pn=region)
+            # Get trending searches using trendspy
+            logger.info(f"Fetching trending topics from Google Trends (region={region})...")
+            trending = self.trends.trending_now(geo=region)
 
-            if trending_df.empty:
+            if not trending:
                 logger.warning("No trending topics found")
                 return []
 
             topics = []
-            trending_searches = trending_df[0].head(count).tolist()
+            # Limit to requested count
+            for trend in trending[:count]:
+                # trendspy provides volume directly
+                keyword = trend.keyword
+                volume = trend.volume if hasattr(trend, 'volume') else 0
 
-            for keyword in trending_searches:
-                # Get interest over time for relative popularity score
-                try:
-                    self.pytrends.build_payload([keyword], timeframe='now 7-d')
-                    interest_df = self.pytrends.interest_over_time()
+                # Calculate trend score (normalized 0-100)
+                trend_score = min(100, (volume / 10000)) if volume else 0
 
-                    trend_score = 0
-                    if not interest_df.empty and keyword in interest_df.columns:
-                        trend_score = float(interest_df[keyword].mean())
+                topics.append({
+                    'keyword': keyword,
+                    'trend_score': trend_score,
+                    'search_volume': volume
+                })
 
-                    topics.append({
-                        'keyword': keyword,
-                        'trend_score': trend_score,
-                        'search_volume': int(trend_score * 100)  # Approximation
-                    })
+                logger.debug(f"Found trending topic: {keyword} (volume: {volume:,})")
 
-                    # Rate limiting
-                    time.sleep(1)
-
-                except Exception as e:
-                    logger.error(f"Error fetching details for '{keyword}': {e}")
-                    topics.append({
-                        'keyword': keyword,
-                        'trend_score': 0,
-                        'search_volume': 0
-                    })
-
+            logger.info(f"Successfully fetched {len(topics)} trending topics")
             return topics
 
         except Exception as e:
-            logger.error(f"Error fetching trending topics: {e}")
+            logger.error(f"Error fetching trending topics with trendspy: {e}")
             return []
 
     def save_trending_topics(self, topics):
