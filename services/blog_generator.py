@@ -3,6 +3,7 @@ from openai import OpenAI
 import re
 from datetime import datetime
 import logging
+from difflib import SequenceMatcher
 from models import BlogPost, db
 from config import Config
 
@@ -15,6 +16,65 @@ class BlogGenerator:
     def __init__(self):
         self.client = OpenAI(api_key=Config.OPENAI_API_KEY)
         self.model = Config.OPENAI_MODEL
+
+    def is_similar_to_existing(self, title, threshold=0.75):
+        """
+        Check if a title is too similar to existing posts
+
+        Args:
+            title: The title to check
+            threshold: Similarity threshold (0.0-1.0, default 0.75 = 75% similar)
+
+        Returns:
+            tuple: (is_similar: bool, similar_post: BlogPost or None)
+        """
+        existing_posts = BlogPost.query.all()
+
+        for post in existing_posts:
+            # Calculate similarity ratio
+            similarity = SequenceMatcher(None, title.lower(), post.title.lower()).ratio()
+
+            if similarity >= threshold:
+                logger.warning(f"Title too similar to existing post: '{title}' vs '{post.title}' ({similarity:.2%} similar)")
+                return True, post
+
+        return False, None
+
+    def is_topic_covered(self, topic, threshold=0.70):
+        """
+        Check if a topic has already been covered in existing posts
+
+        Args:
+            topic: The topic/keyword to check
+            threshold: Similarity threshold (0.0-1.0, default 0.70 = 70% similar)
+
+        Returns:
+            tuple: (is_covered: bool, similar_post: BlogPost or None)
+        """
+        existing_posts = BlogPost.query.all()
+        topic_lower = topic.lower()
+
+        for post in existing_posts:
+            # Check title similarity
+            title_similarity = SequenceMatcher(None, topic_lower, post.title.lower()).ratio()
+
+            # Check if topic keywords appear in title
+            topic_words = set(topic_lower.split())
+            title_words = set(post.title.lower().split())
+
+            # Calculate word overlap
+            if topic_words and title_words:
+                common_words = topic_words.intersection(title_words)
+                word_overlap = len(common_words) / len(topic_words)
+            else:
+                word_overlap = 0
+
+            # Consider it covered if either high title similarity or high word overlap
+            if title_similarity >= threshold or word_overlap >= 0.6:
+                logger.info(f"Topic '{topic}' already covered by: '{post.title}' (similarity: {title_similarity:.2%}, overlap: {word_overlap:.2%})")
+                return True, post
+
+        return False, None
 
     def generate_blog_post(self, topic, min_words=2000, max_words=3500):
         """

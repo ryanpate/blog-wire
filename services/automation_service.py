@@ -31,9 +31,9 @@ class AutomationService:
         generated_posts = []
 
         try:
-            # Step 1: Fetch trending topics
+            # Step 1: Fetch trending topics (get more to account for duplicates)
             logger.info("Fetching trending topics from Google Trends...")
-            trending_topics = self.trends_service.get_trending_topics(count=count * 2)
+            trending_topics = self.trends_service.get_trending_topics(count=count * 3)
 
             if not trending_topics:
                 logger.warning("No trending topics found. Using fallback custom topics.")
@@ -43,15 +43,27 @@ class AutomationService:
             saved_topics = self.trends_service.save_trending_topics(trending_topics)
 
             # Step 3: Generate blog posts for each topic
-            for i in range(count):
+            attempts = 0
+            max_attempts = len(trending_topics)
+
+            while len(generated_posts) < count and attempts < max_attempts:
+                attempts += 1
+
                 # Get next pending topic
                 topic = self.trends_service.get_next_pending_topic()
 
                 if not topic:
-                    logger.warning(f"No more pending topics. Generated {i} of {count} posts.")
+                    logger.warning(f"No more pending topics. Generated {len(generated_posts)} of {count} posts.")
                     break
 
-                logger.info(f"Processing topic: {topic.keyword}")
+                logger.info(f"Processing topic ({len(generated_posts)+1}/{count}): {topic.keyword}")
+
+                # Check if topic already covered
+                is_covered, similar_post = self.blog_generator.is_topic_covered(topic.keyword)
+                if is_covered:
+                    logger.info(f"Skipping '{topic.keyword}' - already covered by: '{similar_post.title}'")
+                    self.trends_service.mark_topic_processed(topic.id, status='skipped')
+                    continue
 
                 # Mark topic as in progress
                 topic.status = 'in_progress'
@@ -66,6 +78,13 @@ class AutomationService:
 
                 if not blog_data:
                     logger.error(f"Failed to generate blog for '{topic.keyword}'")
+                    self.trends_service.mark_topic_processed(topic.id, status='skipped')
+                    continue
+
+                # Check if generated title is too similar to existing posts
+                is_similar, similar_post = self.blog_generator.is_similar_to_existing(blog_data['title'])
+                if is_similar:
+                    logger.warning(f"Skipping generated post - title too similar to: '{similar_post.title}'")
                     self.trends_service.mark_topic_processed(topic.id, status='skipped')
                     continue
 
@@ -85,30 +104,38 @@ class AutomationService:
                 if blog_post:
                     generated_posts.append(blog_post)
                     self.trends_service.mark_topic_processed(topic.id, status='completed')
-                    logger.info(f"Successfully published blog: {blog_post.title}")
+                    logger.info(f"✅ Successfully published blog: {blog_post.title}")
                 else:
                     logger.error(f"Failed to save blog for '{topic.keyword}'")
                     self.trends_service.mark_topic_processed(topic.id, status='skipped')
 
-            logger.info(f"Daily blog generation completed. Generated {len(generated_posts)} posts.")
+            logger.info(f"Daily blog generation completed. Generated {len(generated_posts)} posts (attempted {attempts} topics).")
             return generated_posts
 
         except Exception as e:
             logger.error(f"Error in daily blog generation workflow: {e}")
             return generated_posts
 
-    def generate_single_blog(self, keyword):
+    def generate_single_blog(self, keyword, skip_duplicate_check=False):
         """
         Generate a single blog post for a specific keyword
 
         Args:
             keyword: Topic keyword
+            skip_duplicate_check: If True, skip duplicate detection (default: False)
 
         Returns:
             BlogPost: Generated blog post or None
         """
         try:
             logger.info(f"Generating single blog for keyword: {keyword}")
+
+            # Check if topic already covered (unless skipped)
+            if not skip_duplicate_check:
+                is_covered, similar_post = self.blog_generator.is_topic_covered(keyword)
+                if is_covered:
+                    logger.warning(f"Skipping '{keyword}' - already covered by: '{similar_post.title}'")
+                    return None
 
             # Generate blog post
             blog_data = self.blog_generator.generate_blog_post(
@@ -119,6 +146,12 @@ class AutomationService:
 
             if not blog_data:
                 logger.error(f"Failed to generate blog for '{keyword}'")
+                return None
+
+            # Check if generated title is too similar to existing posts
+            is_similar, similar_post = self.blog_generator.is_similar_to_existing(blog_data['title'])
+            if is_similar:
+                logger.warning(f"Skipping generated post - title too similar to: '{similar_post.title}'")
                 return None
 
             # Inject affiliate links
