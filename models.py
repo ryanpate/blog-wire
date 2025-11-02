@@ -16,8 +16,8 @@ class BlogPost(db.Model):
     excerpt = db.Column(Text)
 
     # SEO fields
-    meta_description = db.Column(db.String(160))
-    meta_keywords = db.Column(db.String(255))
+    meta_description = db.Column(db.String(500))  # Increased from 160 to support longer descriptions
+    meta_keywords = db.Column(db.String(500))  # Increased from 255 for flexibility
     featured_image_url = db.Column(db.String(500))
 
     # Status
