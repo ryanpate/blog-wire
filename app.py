@@ -321,6 +321,26 @@ def api_delete_empty_posts():
     })
 
 
+@app.route('/api/posts/delete-all', methods=['POST'])
+def api_delete_all_posts():
+    """Delete all blog posts (use with caution!)"""
+    all_posts = BlogPost.query.all()
+
+    if not all_posts:
+        return jsonify({'success': True, 'message': 'No posts found', 'deleted': 0})
+
+    count = len(all_posts)
+    for post in all_posts:
+        db.session.delete(post)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'Deleted all {count} post(s)',
+        'deleted': count
+    })
+
+
 @app.route('/api/migrate-schema', methods=['POST'])
 def api_migrate_schema():
     """Run database schema migration for PostgreSQL"""
