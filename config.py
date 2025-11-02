@@ -12,7 +12,11 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 
     # Database
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///blog_wire.db')
+    # Fix for Railway's postgres:// URL (SQLAlchemy requires postgresql://)
+    database_url = os.getenv('DATABASE_URL', 'sqlite:///blog_wire.db')
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = database_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # OpenAI
