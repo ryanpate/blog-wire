@@ -12,6 +12,9 @@ from datetime import datetime
 
 from app import app, automation_service
 from config import Config
+from models import db, BlogPost
+import json
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -54,6 +57,43 @@ def daily_blog_generation_job():
 def main():
     """Main function to start the scheduler"""
     logger.info("Blog Wire Automation Scheduler Starting...")
+
+    # Auto-import blog posts on startup if database is empty
+    # This ensures posts are restored after Railway deployments
+    with app.app_context():
+        if BlogPost.query.count() == 0:
+            logger.info("Database is empty. Auto-importing blog posts from export file...")
+            try:
+                export_file = 'blog_posts_export.json'
+
+                if os.path.exists(export_file):
+                    with open(export_file, 'r') as f:
+                        posts_data = json.load(f)
+
+                    imported_count = 0
+                    for post_data in posts_data:
+                        post = BlogPost(
+                            title=post_data['title'],
+                            slug=post_data['slug'],
+                            content=post_data['content'],
+                            excerpt=post_data['excerpt'],
+                            meta_description=post_data['meta_description'],
+                            meta_keywords=post_data['meta_keywords'],
+                            word_count=post_data['word_count'],
+                            status=post_data['status'],
+                            published_at=datetime.fromisoformat(post_data['published_at']) if post_data['published_at'] else None
+                        )
+                        db.session.add(post)
+                        imported_count += 1
+
+                    db.session.commit()
+                    logger.info(f"✅ Auto-imported {imported_count} blog posts successfully")
+                else:
+                    logger.warning(f"Export file {export_file} not found. Skipping auto-import.")
+            except Exception as e:
+                logger.error(f"Error during auto-import: {e}")
+                db.session.rollback()
+
     logger.info(f"Configuration:")
     logger.info(f"  - Posts per day: {Config.POSTS_PER_DAY}")
     logger.info(f"  - Blog domain: {Config.BLOG_DOMAIN}")
