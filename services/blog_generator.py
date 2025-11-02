@@ -47,7 +47,7 @@ class BlogGenerator:
                     }
                 ],
                 temperature=0.7,
-                max_tokens=16384  # Increased to support 2000-3500 word blog posts
+                max_tokens=4096  # Max for gpt-4-turbo-preview model
             )
 
             content = response.choices[0].message.content

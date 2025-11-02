@@ -36,8 +36,8 @@ class AutomationService:
             trending_topics = self.trends_service.get_trending_topics(count=count * 2)
 
             if not trending_topics:
-                logger.warning("No trending topics found. Aborting workflow.")
-                return generated_posts
+                logger.warning("No trending topics found. Using fallback custom topics.")
+                return self._generate_from_custom_topics(count)
 
             # Step 2: Save trending topics to database
             saved_topics = self.trends_service.save_trending_topics(trending_topics)
@@ -143,6 +143,56 @@ class AutomationService:
         except Exception as e:
             logger.error(f"Error generating single blog: {e}")
             return None
+
+    def _generate_from_custom_topics(self, count=1):
+        """
+        Fallback method to generate blogs from custom topics file
+
+        Args:
+            count: Number of blogs to generate
+
+        Returns:
+            list: Generated blog posts
+        """
+        import os
+        import random
+
+        generated_posts = []
+
+        try:
+            topics_file = 'custom_topics.txt'
+            if not os.path.exists(topics_file):
+                logger.error("custom_topics.txt not found. Cannot generate blogs.")
+                return generated_posts
+
+            # Read topics from file
+            with open(topics_file, 'r') as f:
+                topics = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
+
+            if not topics:
+                logger.error("No topics found in custom_topics.txt")
+                return generated_posts
+
+            # Randomly select topics
+            selected_topics = random.sample(topics, min(count, len(topics)))
+            logger.info(f"Selected {len(selected_topics)} custom topics for generation")
+
+            # Generate blogs for selected topics
+            for topic in selected_topics:
+                logger.info(f"Generating blog for custom topic: {topic}")
+                blog_post = self.generate_single_blog(topic)
+
+                if blog_post:
+                    generated_posts.append(blog_post)
+                    logger.info(f"Successfully generated blog: {blog_post.title}")
+                else:
+                    logger.error(f"Failed to generate blog for custom topic: {topic}")
+
+            return generated_posts
+
+        except Exception as e:
+            logger.error(f"Error in custom topics fallback: {e}")
+            return generated_posts
 
     def get_blog_statistics(self):
         """
