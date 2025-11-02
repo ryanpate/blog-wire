@@ -6,6 +6,7 @@ import logging
 from difflib import SequenceMatcher
 from models import BlogPost, db
 from config import Config
+from services.image_service import ImageService
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,7 @@ class BlogGenerator:
     def __init__(self):
         self.client = OpenAI(api_key=Config.OPENAI_API_KEY)
         self.model = Config.OPENAI_MODEL
+        self.image_service = ImageService()
 
     def is_similar_to_existing(self, title, threshold=0.75):
         """
@@ -114,6 +116,12 @@ class BlogGenerator:
 
             # Parse the structured response
             blog_data = self._parse_blog_content(content, keyword)
+
+            # Fetch featured image
+            blog_data['featured_image_url'] = self.image_service.get_featured_image(
+                title=blog_data['title'],
+                keywords=blog_data.get('meta_keywords')
+            )
 
             return blog_data
 
@@ -270,6 +278,7 @@ IMPORTANT:
                 excerpt=blog_data['excerpt'],
                 meta_description=blog_data['meta_description'],
                 meta_keywords=blog_data['meta_keywords'],
+                featured_image_url=blog_data.get('featured_image_url'),
                 word_count=blog_data['word_count'],
                 topic_id=topic_id,
                 status=status,

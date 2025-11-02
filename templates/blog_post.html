@@ -60,6 +60,12 @@
         </div>
     </header>
 
+    {% if post.featured_image_url %}
+    <div class="post-featured-image">
+        <img src="{{ post.featured_image_url }}" alt="{{ post.title }}" loading="eager">
+    </div>
+    {% endif %}
+
     {% if config.ADSENSE_ENABLED %}
     <!-- AdSense In-Article Ad -->
     <div class="ad-container ad-in-article">

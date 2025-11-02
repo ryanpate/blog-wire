@@ -42,3 +42,10 @@ class Config:
     GOOGLE_SITE_VERIFICATION = os.getenv('GOOGLE_SITE_VERIFICATION', '')
     SITE_AUTHOR = os.getenv('SITE_AUTHOR', 'Ryan Pate')
     SITE_TWITTER = os.getenv('SITE_TWITTER', '')  # Twitter handle without @
+
+    # Image Generation
+    UNSPLASH_ACCESS_KEY = os.getenv('UNSPLASH_ACCESS_KEY', '')
+    DALLE_ENABLED = os.getenv('DALLE_ENABLED', 'False').lower() == 'true'
+    DALLE_QUALITY = os.getenv('DALLE_QUALITY', 'standard')  # 'standard' or 'hd'
+    IMAGE_PLACEHOLDER_URL = os.getenv('IMAGE_PLACEHOLDER_URL',
+                                     'https://via.placeholder.com/1200x630/10b981/ffffff?text=Blog+Wire')
