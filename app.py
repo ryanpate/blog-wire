@@ -179,6 +179,14 @@ Sitemap: https://{Config.BLOG_DOMAIN}/sitemap.xml
     return robots_txt, 200, {'Content-Type': 'text/plain'}
 
 
+@app.route('/ads.txt')
+def ads_txt():
+    """Ads.txt for Google AdSense verification"""
+    ads_txt = """google.com, pub-5523870768931777, DIRECT, f08c47fec0942fa0
+"""
+    return ads_txt, 200, {'Content-Type': 'text/plain'}
+
+
 @app.route('/google<verification_code>.html')
 def google_verification(verification_code):
     """Google Search Console HTML file verification"""
