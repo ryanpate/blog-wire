@@ -9,6 +9,7 @@ from config import Config
 from models import db, BlogPost, TrendingTopic, AffiliateLink
 from services.automation_service import AutomationService
 from services.seo_service import SEOService
+from services.image_service import ImageService
 
 # Configure logging
 logging.basicConfig(
@@ -363,6 +364,91 @@ def api_migrate_schema():
         return jsonify({
             'success': False,
             'message': f'Schema migration failed: {str(e)}'
+        }), 500
+
+
+@app.route('/api/posts/regenerate-images', methods=['POST'])
+def api_regenerate_images():
+    """Regenerate images for existing blog posts"""
+    try:
+        # Initialize ImageService
+        image_service = ImageService()
+
+        if not image_service.r2_enabled:
+            return jsonify({
+                'success': False,
+                'message': 'R2 storage is not enabled! Please configure R2 environment variables.'
+            }), 500
+
+        # Get all published posts
+        posts = BlogPost.query.filter_by(status='published').order_by(BlogPost.published_at.desc()).all()
+
+        logger.info(f"Found {len(posts)} published posts")
+
+        # Find posts that need new images
+        def needs_new_image(post):
+            if not post.featured_image_url:
+                return True
+            if 'placeholder' in post.featured_image_url.lower():
+                return True
+            if 'oaidalleapiprodscus.blob.core.windows.net' in post.featured_image_url:
+                return True
+            return False
+
+        posts_to_update = [post for post in posts if needs_new_image(post)]
+
+        logger.info(f"Found {len(posts_to_update)} posts that need new images")
+
+        if not posts_to_update:
+            return jsonify({
+                'success': True,
+                'message': 'All posts already have valid images!',
+                'updated': 0
+            })
+
+        updated_count = 0
+        failed_count = 0
+
+        # Process each post
+        for i, post in enumerate(posts_to_update, 1):
+            logger.info(f"[{i}/{len(posts_to_update)}] Processing: {post.title}")
+
+            try:
+                # Generate new image
+                new_image_url = image_service.get_featured_image(
+                    title=post.title,
+                    keywords=post.meta_keywords
+                )
+
+                if new_image_url:
+                    # Update the post
+                    post.featured_image_url = new_image_url
+                    db.session.commit()
+                    updated_count += 1
+                    logger.info(f"✅ Updated with new image: {new_image_url}")
+                else:
+                    failed_count += 1
+                    logger.warning(f"⚠️ Failed to generate image for: {post.title}")
+
+            except Exception as e:
+                failed_count += 1
+                logger.error(f"❌ Error processing post {post.id}: {e}")
+                db.session.rollback()
+                continue
+
+        return jsonify({
+            'success': True,
+            'message': f'Image regeneration completed',
+            'updated': updated_count,
+            'failed': failed_count,
+            'total_checked': len(posts_to_update)
+        })
+
+    except Exception as e:
+        logger.error(f"Error in image regeneration: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Image regeneration failed: {str(e)}'
         }), 500
 
 
