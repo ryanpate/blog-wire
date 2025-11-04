@@ -1,5 +1,9 @@
 import requests
 import logging
+import boto3
+import uuid
+from datetime import datetime
+from io import BytesIO
 from openai import OpenAI
 from config import Config
 
@@ -28,6 +32,35 @@ class ImageService:
         else:
             self.openai_client = None
             logger.warning(f"OpenAI client NOT initialized (dalle_enabled={self.dalle_enabled}, has_key={bool(Config.OPENAI_API_KEY)})")
+
+        # Initialize R2 client for permanent image storage
+        self.r2_enabled = all([
+            Config.R2_ACCOUNT_ID,
+            Config.R2_ACCESS_KEY_ID,
+            Config.R2_SECRET_ACCESS_KEY,
+            Config.R2_BUCKET_NAME,
+            Config.R2_PUBLIC_URL
+        ])
+
+        if self.r2_enabled:
+            try:
+                self.r2_client = boto3.client(
+                    's3',
+                    endpoint_url=f'https://{Config.R2_ACCOUNT_ID}.r2.cloudflarestorage.com',
+                    aws_access_key_id=Config.R2_ACCESS_KEY_ID,
+                    aws_secret_access_key=Config.R2_SECRET_ACCESS_KEY,
+                    region_name='auto'
+                )
+                self.r2_bucket = Config.R2_BUCKET_NAME
+                self.r2_public_url = Config.R2_PUBLIC_URL.rstrip('/')
+                logger.info("✅ R2 client initialized successfully for permanent image storage")
+            except Exception as e:
+                logger.error(f"Failed to initialize R2 client: {e}")
+                self.r2_enabled = False
+                self.r2_client = None
+        else:
+            self.r2_client = None
+            logger.warning("R2 storage not configured - DALL-E images will use temporary URLs")
 
     def get_featured_image(self, title, keywords=None):
         """
@@ -128,13 +161,13 @@ class ImageService:
 
     def _generate_dalle_image(self, title):
         """
-        Generate image using DALL-E 3
+        Generate image using DALL-E 3 and upload to R2 for permanent storage
 
         Args:
             title: Blog post title to generate image for
 
         Returns:
-            str: Image URL or None if generation failed
+            str: Permanent image URL or None if generation failed
         """
         if not self.openai_client:
             logger.warning("OpenAI client not initialized. Skipping DALL-E generation.")
@@ -154,13 +187,73 @@ class ImageService:
                 n=1
             )
 
-            image_url = response.data[0].url
+            temp_image_url = response.data[0].url
 
             logger.info(f"DALL-E image generated successfully")
-            return image_url
+
+            # If R2 is enabled, download and upload to R2 for permanent storage
+            if self.r2_enabled and self.r2_client:
+                logger.info("Uploading DALL-E image to R2 for permanent storage...")
+                permanent_url = self._upload_to_r2(temp_image_url, title)
+                if permanent_url:
+                    logger.info(f"✅ Image permanently stored at: {permanent_url}")
+                    return permanent_url
+                else:
+                    logger.warning("R2 upload failed, using temporary DALL-E URL")
+                    return temp_image_url
+            else:
+                logger.warning("R2 not configured, using temporary DALL-E URL (expires in 2 hours)")
+                return temp_image_url
 
         except Exception as e:
             logger.error(f"DALL-E generation error: {e}")
+            return None
+
+    def _upload_to_r2(self, image_url, title):
+        """
+        Download image from URL and upload to R2 storage
+
+        Args:
+            image_url: URL of the image to download
+            title: Blog post title (used for filename)
+
+        Returns:
+            str: Public R2 URL or None if upload failed
+        """
+        try:
+            # Download the image
+            logger.info(f"Downloading image from: {image_url}")
+            response = requests.get(image_url, timeout=30)
+            response.raise_for_status()
+
+            # Generate unique filename
+            # Use YYYYMM folder structure (e.g., 202511/)
+            now = datetime.utcnow()
+            folder = now.strftime('%Y%m')
+            unique_id = str(uuid.uuid4())[:8]
+            filename = f"{folder}/{unique_id}.png"
+
+            # Upload to R2
+            logger.info(f"Uploading to R2 bucket '{self.r2_bucket}' as: {filename}")
+            self.r2_client.put_object(
+                Bucket=self.r2_bucket,
+                Key=filename,
+                Body=BytesIO(response.content),
+                ContentType='image/png',
+                CacheControl='public, max-age=31536000'  # Cache for 1 year
+            )
+
+            # Construct public URL
+            public_url = f"{self.r2_public_url}/{filename}"
+            logger.info(f"✅ Image uploaded successfully to R2: {public_url}")
+
+            return public_url
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error downloading image: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Error uploading to R2: {e}")
             return None
 
     def _build_search_query(self, title, keywords=None):

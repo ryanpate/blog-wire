@@ -55,6 +55,7 @@ with app.app_context():
                         excerpt=post_data['excerpt'],
                         meta_description=post_data['meta_description'],
                         meta_keywords=post_data['meta_keywords'],
+                        featured_image_url=post_data.get('featured_image_url'),
                         word_count=post_data['word_count'],
                         status=post_data['status'],
                         published_at=datetime.fromisoformat(post_data['published_at']) if post_data['published_at'] else None
@@ -391,6 +392,7 @@ def api_import_posts():
                 excerpt=post_data['excerpt'],
                 meta_description=post_data['meta_description'],
                 meta_keywords=post_data['meta_keywords'],
+                featured_image_url=post_data.get('featured_image_url'),
                 word_count=post_data['word_count'],
                 status=post_data['status'],
                 published_at=datetime.fromisoformat(post_data['published_at']) if post_data['published_at'] else None

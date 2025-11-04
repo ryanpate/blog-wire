@@ -49,3 +49,10 @@ class Config:
     DALLE_QUALITY = os.getenv('DALLE_QUALITY', 'standard')  # 'standard' or 'hd'
     IMAGE_PLACEHOLDER_URL = os.getenv('IMAGE_PLACEHOLDER_URL',
                                      'https://via.placeholder.com/1200x630/10b981/ffffff?text=Blog+Wire')
+
+    # Cloudflare R2 Storage (for permanent DALL-E image storage)
+    R2_ACCOUNT_ID = os.getenv('R2_ACCOUNT_ID', '')
+    R2_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID', '')
+    R2_SECRET_ACCESS_KEY = os.getenv('R2_SECRET_ACCESS_KEY', '')
+    R2_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', '')
+    R2_PUBLIC_URL = os.getenv('R2_PUBLIC_URL', '')  # e.g., https://pub-xxx.r2.dev

@@ -48,6 +48,7 @@ class BlogPost(db.Model):
             'content': self.content,
             'meta_description': self.meta_description,
             'meta_keywords': self.meta_keywords,
+            'featured_image_url': self.featured_image_url,
             'status': self.status,
             'published_at': self.published_at.isoformat() if self.published_at else None,
             'view_count': self.view_count,
