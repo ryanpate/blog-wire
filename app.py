@@ -452,6 +452,61 @@ def api_regenerate_images():
         }), 500
 
 
+@app.route('/api/posts/remove-old-images', methods=['POST'])
+def api_remove_old_images():
+    """Remove images from posts older than today"""
+    from datetime import date
+
+    try:
+        # Get today's date
+        today = date.today()
+
+        logger.info(f"Removing images from posts before: {today}")
+
+        # Get all published posts
+        all_posts = BlogPost.query.filter_by(status='published').all()
+
+        # Find posts from before today that have images
+        posts_to_update = []
+        for post in all_posts:
+            if post.published_at:
+                post_date = post.published_at.date()
+                if post_date < today and post.featured_image_url:
+                    posts_to_update.append(post)
+
+        logger.info(f"Found {len(posts_to_update)} posts to update")
+
+        if not posts_to_update:
+            return jsonify({
+                'success': True,
+                'message': 'No old posts with images to update',
+                'updated': 0
+            })
+
+        # Remove images from old posts
+        updated_count = 0
+        for post in posts_to_update:
+            logger.info(f"Removing image from: {post.title}")
+            post.featured_image_url = None
+            updated_count += 1
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Removed images from {updated_count} old posts',
+            'updated': updated_count
+        })
+
+    except Exception as e:
+        logger.error(f"Error removing old images: {e}")
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error: {str(e)}'
+        }), 500
+
+
 @app.route('/api/posts/import', methods=['POST'])
 def api_import_posts():
     """Import blog posts from JSON file"""
