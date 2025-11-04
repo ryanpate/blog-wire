@@ -34,6 +34,14 @@ class ImageService:
             logger.warning(f"OpenAI client NOT initialized (dalle_enabled={self.dalle_enabled}, has_key={bool(Config.OPENAI_API_KEY)})")
 
         # Initialize R2 client for permanent image storage
+        # Log R2 configuration for debugging
+        logger.info(f"R2 Config check:")
+        logger.info(f"  - R2_ACCOUNT_ID: {'SET' if Config.R2_ACCOUNT_ID else 'NOT SET'}")
+        logger.info(f"  - R2_ACCESS_KEY_ID: {'SET' if Config.R2_ACCESS_KEY_ID else 'NOT SET'}")
+        logger.info(f"  - R2_SECRET_ACCESS_KEY: {'SET' if Config.R2_SECRET_ACCESS_KEY else 'NOT SET'}")
+        logger.info(f"  - R2_BUCKET_NAME: {Config.R2_BUCKET_NAME if Config.R2_BUCKET_NAME else 'NOT SET'}")
+        logger.info(f"  - R2_PUBLIC_URL: {Config.R2_PUBLIC_URL if Config.R2_PUBLIC_URL else 'NOT SET'}")
+
         self.r2_enabled = all([
             Config.R2_ACCOUNT_ID,
             Config.R2_ACCESS_KEY_ID,
