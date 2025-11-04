@@ -37,11 +37,9 @@
     <!-- Stylesheets -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    {% if config.ADSENSE_ENABLED and config.ADSENSE_CLIENT_ID %}
     <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ config.ADSENSE_CLIENT_ID }}"
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5523870768931777"
             crossorigin="anonymous"></script>
-    {% endif %}
 
     {% block head_extra %}{% endblock %}
 </head>
