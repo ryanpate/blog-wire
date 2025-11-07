@@ -1,10 +1,9 @@
-from flask import Flask, render_template, jsonify, request, abort, make_response
+from flask import Flask, render_template, jsonify, request, abort
 from flask_migrate import Migrate
-from flask_compress import Compress
 import logging
 import markdown
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from config import Config
 from models import db, BlogPost, TrendingTopic, AffiliateLink
@@ -26,43 +25,6 @@ app.config.from_object(Config)
 # Initialize extensions
 db.init_app(app)
 migrate = Migrate(app, db)
-
-# Enable compression for all responses
-compress = Compress()
-compress.init_app(app)
-
-# Add cache control and performance headers
-@app.after_request
-def add_performance_headers(response):
-    """Add cache control and performance headers"""
-
-    # Cache static assets for 1 year
-    if request.path.startswith('/static/'):
-        response.cache_control.max_age = 31536000  # 1 year
-        response.cache_control.public = True
-        response.headers['Expires'] = (datetime.now() + timedelta(days=365)).strftime('%a, %d %b %Y %H:%M:%S GMT')
-
-    # Cache sitemap and robots.txt for 1 day
-    elif request.path in ['/sitemap.xml', '/robots.txt', '/ads.txt']:
-        response.cache_control.max_age = 86400  # 1 day
-        response.cache_control.public = True
-
-    # Cache blog posts for 1 hour (they rarely change)
-    elif request.path.startswith('/blog/'):
-        response.cache_control.max_age = 3600  # 1 hour
-        response.cache_control.public = True
-
-    # Cache homepage for 10 minutes
-    elif request.path == '/':
-        response.cache_control.max_age = 600  # 10 minutes
-        response.cache_control.public = True
-
-    # Add security and performance headers
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-
-    return response
 
 # Initialize services
 automation_service = AutomationService()

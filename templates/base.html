@@ -34,14 +34,10 @@
 
     {% block og_meta %}{% endblock %}
 
-    <!-- Preconnect to external domains -->
-    <link rel="preconnect" href="https://pagead2.googlesyndication.com">
-    <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <!-- Minified stylesheet for faster loading -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.min.css') }}">
-
-    <!-- Google AdSense - async loaded -->
+    <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5523870768931777"
             crossorigin="anonymous"></script>
 
