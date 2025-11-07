@@ -74,17 +74,9 @@
          data-ad-slot="YOUR_AD_SLOT_ID"
          data-ad-format="auto"
          data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
 </div>
-{% endif %}
-{% endblock %}
-
-{% block scripts %}
-{% if config.ADSENSE_ENABLED %}
-<script>
-    // Initialize AdSense ads after page load
-    window.addEventListener('load', function() {
-        (adsbygoogle = window.adsbygoogle || []).push({});
-    });
-</script>
 {% endif %}
 {% endblock %}
