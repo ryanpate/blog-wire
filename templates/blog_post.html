@@ -38,6 +38,11 @@
 {% endblock %}
 
 {% block head_extra %}
+<!-- Preload LCP image -->
+{% if post.featured_image_url %}
+<link rel="preload" as="image" href="{{ post.featured_image_url }}" fetchpriority="high">
+{% endif %}
+
 <!-- Schema.org JSON-LD -->
 <script type="application/ld+json">
 {{ schema_markup|safe }}
@@ -62,7 +67,7 @@
 
     {% if post.featured_image_url %}
     <div class="post-featured-image">
-        <img src="{{ post.featured_image_url }}" alt="{{ post.title }}" fetchpriority="high">
+        <img src="{{ post.featured_image_url }}" alt="{{ post.title }}" width="800" height="800" fetchpriority="high">
     </div>
     {% endif %}
 

@@ -6,6 +6,7 @@ from datetime import datetime
 from io import BytesIO
 from openai import OpenAI
 from config import Config
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -190,7 +191,7 @@ class ImageService:
             response = self.openai_client.images.generate(
                 model="dall-e-3",
                 prompt=prompt,
-                size="1792x1024",  # Landscape format for blog headers
+                size="1024x1024",  # Optimized size for web delivery (was 1792x1024)
                 quality=self.dalle_quality,  # 'standard' or 'hd'
                 n=1
             )
@@ -217,9 +218,57 @@ class ImageService:
             logger.error(f"DALL-E generation error: {e}")
             return None
 
+    def _optimize_image(self, image_bytes, max_width=1200):
+        """
+        Optimize image: resize, convert to JPEG, and compress
+
+        Args:
+            image_bytes: Original image bytes
+            max_width: Maximum width in pixels (default 1200px for web)
+
+        Returns:
+            BytesIO: Optimized image bytes
+        """
+        try:
+            # Open image
+            img = Image.open(BytesIO(image_bytes))
+
+            # Convert RGBA to RGB if needed (for JPEG compatibility)
+            if img.mode in ('RGBA', 'LA', 'P'):
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                img = background
+
+            # Resize if image is too large
+            if img.width > max_width:
+                ratio = max_width / img.width
+                new_height = int(img.height * ratio)
+                img = img.resize((max_width, new_height), Image.Resampling.LANCZOS)
+                logger.info(f"Resized image from {img.width}x{img.height} to {max_width}x{new_height}")
+
+            # Save as optimized JPEG
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=85, optimize=True)
+            output.seek(0)
+
+            original_size = len(image_bytes) / 1024  # KB
+            optimized_size = len(output.getvalue()) / 1024  # KB
+            savings = ((original_size - optimized_size) / original_size) * 100
+
+            logger.info(f"Image optimized: {original_size:.1f}KB → {optimized_size:.1f}KB (saved {savings:.1f}%)")
+
+            return output
+
+        except Exception as e:
+            logger.error(f"Error optimizing image: {e}")
+            # Return original if optimization fails
+            return BytesIO(image_bytes)
+
     def _upload_to_r2(self, image_url, title):
         """
-        Download image from URL and upload to R2 storage
+        Download image from URL, optimize it, and upload to R2 storage
 
         Args:
             image_url: URL of the image to download
@@ -234,20 +283,24 @@ class ImageService:
             response = requests.get(image_url, timeout=30)
             response.raise_for_status()
 
+            # Optimize the image
+            logger.info("Optimizing image...")
+            optimized_image = self._optimize_image(response.content, max_width=1200)
+
             # Generate unique filename
             # Use YYYYMM folder structure (e.g., 202511/)
             now = datetime.utcnow()
             folder = now.strftime('%Y%m')
             unique_id = str(uuid.uuid4())[:8]
-            filename = f"{folder}/{unique_id}.png"
+            filename = f"{folder}/{unique_id}.jpg"  # Changed to .jpg
 
             # Upload to R2
             logger.info(f"Uploading to R2 bucket '{self.r2_bucket}' as: {filename}")
             self.r2_client.put_object(
                 Bucket=self.r2_bucket,
                 Key=filename,
-                Body=BytesIO(response.content),
-                ContentType='image/png',
+                Body=optimized_image,
+                ContentType='image/jpeg',  # Changed to JPEG
                 CacheControl='public, max-age=31536000'  # Cache for 1 year
             )
 

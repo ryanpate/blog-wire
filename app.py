@@ -26,6 +26,15 @@ app.config.from_object(Config)
 db.init_app(app)
 migrate = Migrate(app, db)
 
+# Add basic cache headers for static files
+@app.after_request
+def add_header(response):
+    # Cache static assets for 1 year
+    if request.path.startswith('/static/'):
+        response.cache_control.max_age = 31536000
+        response.cache_control.public = True
+    return response
+
 # Initialize services
 automation_service = AutomationService()
 seo_service = SEOService()
