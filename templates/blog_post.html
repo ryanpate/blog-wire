@@ -38,6 +38,11 @@
 {% endblock %}
 
 {% block head_extra %}
+<!-- Preload LCP image for faster rendering -->
+{% if post.featured_image_url %}
+<link rel="preload" as="image" href="{{ post.featured_image_url }}" fetchpriority="high">
+{% endif %}
+
 <!-- Schema.org JSON-LD -->
 <script type="application/ld+json">
 {{ schema_markup|safe }}
@@ -62,7 +67,7 @@
 
     {% if post.featured_image_url %}
     <div class="post-featured-image">
-        <img src="{{ post.featured_image_url }}" alt="{{ post.title }}" loading="eager">
+        <img src="{{ post.featured_image_url }}" alt="{{ post.title }}" loading="eager" fetchpriority="high">
     </div>
     {% endif %}
 
@@ -75,9 +80,6 @@
              data-ad-format="fluid"
              data-ad-client="{{ config.ADSENSE_CLIENT_ID }}"
              data-ad-slot="YOUR_IN_ARTICLE_AD_SLOT"></ins>
-        <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
     </div>
     {% endif %}
 
@@ -94,9 +96,6 @@
              data-ad-slot="YOUR_BOTTOM_AD_SLOT"
              data-ad-format="auto"
              data-full-width-responsive="true"></ins>
-        <script>
-             (adsbygoogle = window.adsbygoogle || []).push({});
-        </script>
     </div>
     {% endif %}
 
@@ -114,4 +113,18 @@
         </div>
     </footer>
 </article>
+{% endblock %}
+
+{% block scripts %}
+{% if config.ADSENSE_ENABLED %}
+<script>
+    // Initialize all AdSense ads after page load
+    window.addEventListener('load', function() {
+        var ads = document.querySelectorAll('.adsbygoogle');
+        for (var i = 0; i < ads.length; i++) {
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        }
+    });
+</script>
+{% endif %}
 {% endblock %}
