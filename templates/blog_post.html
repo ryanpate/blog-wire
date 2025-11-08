@@ -67,7 +67,12 @@
 
     {% if post.featured_image_url %}
     <div class="post-featured-image">
-        <img src="{{ post.featured_image_url }}" alt="{{ post.title }}" width="800" height="800" fetchpriority="high">
+        <img src="{{ post.featured_image_url }}"
+             alt="Featured image for {{ post.title }} - {{ post.meta_description[:100] if post.meta_description else post.excerpt[:100] }}"
+             width="800"
+             height="800"
+             fetchpriority="high"
+             title="{{ post.title }}">
     </div>
     {% endif %}
 

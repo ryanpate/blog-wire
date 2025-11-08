@@ -64,6 +64,14 @@ class SEOService:
         """
         from config import Config
 
+        # Enhanced author schema with more detail
+        author_schema = {
+            "@type": "Person",
+            "name": Config.SITE_AUTHOR,
+            "url": f"https://{Config.BLOG_DOMAIN}",
+            "description": "Writer and content creator focused on trending topics and insights"
+        }
+
         schema = {
             "@context": "https://schema.org",
             "@type": "BlogPosting",
@@ -71,11 +79,7 @@ class SEOService:
             "description": blog_post.meta_description or blog_post.excerpt,
             "datePublished": blog_post.published_at.isoformat() if blog_post.published_at else None,
             "dateModified": blog_post.updated_at.isoformat() if blog_post.updated_at else blog_post.published_at.isoformat() if blog_post.published_at else None,
-            "author": {
-                "@type": "Person",
-                "name": Config.SITE_AUTHOR,
-                "url": f"https://{Config.BLOG_DOMAIN}"
-            },
+            "author": author_schema,
             "publisher": {
                 "@type": "Organization",
                 "name": Config.BLOG_NAME,
@@ -89,16 +93,19 @@ class SEOService:
                 "@type": "WebPage",
                 "@id": f"https://{Config.BLOG_DOMAIN}/blog/{blog_post.slug}"
             },
-            "wordCount": blog_post.word_count
+            "wordCount": blog_post.word_count,
+            "inLanguage": "en-US",
+            "isAccessibleForFree": True
         }
 
-        # Add image if available
+        # Add image if available with enhanced properties
         if blog_post.featured_image_url:
             schema["image"] = {
                 "@type": "ImageObject",
                 "url": blog_post.featured_image_url,
                 "width": 1200,
-                "height": 630
+                "height": 630,
+                "caption": blog_post.title
             }
 
         # Add keywords/tags if available
@@ -167,6 +174,88 @@ class SEOService:
                 "target": f"https://{Config.BLOG_DOMAIN}/?s={{search_term_string}}",
                 "query-input": "required name=search_term_string"
             }
+        }
+
+    def extract_faq_from_content(self, content):
+        """
+        Extract FAQ questions and answers from blog content
+        Looks for patterns like "What is...", "How to...", "Why does..." followed by answers
+
+        Args:
+            content: Blog post content in markdown
+
+        Returns:
+            list: List of dicts with 'question' and 'answer' keys, or empty list
+        """
+        faqs = []
+
+        # Pattern to match questions in headers (H2/H3) and their following content
+        # Looks for headers that start with question words
+        question_patterns = [
+            r'##\s+(What|Why|How|When|Where|Who|Can|Should|Is|Are|Do|Does)\s+.+?\?',
+            r'###\s+(What|Why|How|When|Where|Who|Can|Should|Is|Are|Do|Does)\s+.+?\?'
+        ]
+
+        for pattern in question_patterns:
+            matches = re.finditer(pattern, content, re.IGNORECASE | re.MULTILINE)
+            for match in matches:
+                question = match.group(0).strip('#').strip()
+
+                # Get the position after the question
+                start_pos = match.end()
+
+                # Find the next header or end of content
+                next_header = re.search(r'\n##', content[start_pos:])
+                if next_header:
+                    end_pos = start_pos + next_header.start()
+                else:
+                    end_pos = len(content)
+
+                # Extract answer (next paragraph after the question)
+                answer_text = content[start_pos:end_pos].strip()
+
+                # Take first 2-3 paragraphs as answer (up to 500 chars)
+                paragraphs = [p.strip() for p in answer_text.split('\n\n') if p.strip()]
+                answer = ' '.join(paragraphs[:2])[:500]
+
+                if answer and len(answer) > 50:  # Only include substantial answers
+                    faqs.append({
+                        'question': question,
+                        'answer': answer
+                    })
+
+        return faqs[:5]  # Limit to 5 FAQs for schema
+
+    def generate_faq_schema(self, blog_post):
+        """
+        Generate FAQ schema markup if the content contains Q&A patterns
+
+        Args:
+            blog_post: BlogPost model instance
+
+        Returns:
+            dict: Schema.org FAQPage markup, or None if no FAQs found
+        """
+        faqs = self.extract_faq_from_content(blog_post.content)
+
+        if not faqs:
+            return None
+
+        faq_entities = []
+        for faq in faqs:
+            faq_entities.append({
+                "@type": "Question",
+                "name": faq['question'],
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": faq['answer']
+                }
+            })
+
+        return {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": faq_entities
         }
 
     def calculate_seo_score(self, blog_post):
