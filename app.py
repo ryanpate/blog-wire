@@ -126,11 +126,16 @@ def blog_post(slug):
     # Generate schema markup for SEO
     article_schema = seo_service.generate_schema_markup(post)
     breadcrumb_schema = seo_service.generate_breadcrumb_schema(post)
+    faq_schema = seo_service.generate_faq_schema(post)
 
     # Combine schemas into a graph
+    schema_graph = [article_schema, breadcrumb_schema]
+    if faq_schema:
+        schema_graph.append(faq_schema)
+
     schema_markup = {
         "@context": "https://schema.org",
-        "@graph": [article_schema, breadcrumb_schema]
+        "@graph": schema_graph
     }
 
     return render_template(
