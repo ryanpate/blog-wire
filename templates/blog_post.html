@@ -65,6 +65,21 @@
         </div>
     </header>
 
+    {% if config.ADSENSE_ENABLED %}
+    <!-- AdSense Top Banner Ad -->
+    <div class="ad-container ad-top">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="{{ config.ADSENSE_CLIENT_ID }}"
+             data-ad-slot="7285922677"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <script>
+             (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </div>
+    {% endif %}
+
     {% if post.featured_image_url %}
     <div class="post-featured-image">
         <img src="{{ post.featured_image_url }}"
@@ -77,14 +92,14 @@
     {% endif %}
 
     {% if config.ADSENSE_ENABLED %}
-    <!-- AdSense In-Article Ad -->
+    <!-- AdSense Middle Banner Ad -->
     <div class="ad-container ad-in-article">
         <ins class="adsbygoogle"
              style="display:block; text-align:center;"
              data-ad-layout="in-article"
              data-ad-format="fluid"
              data-ad-client="{{ config.ADSENSE_CLIENT_ID }}"
-             data-ad-slot="YOUR_IN_ARTICLE_AD_SLOT"></ins>
+             data-ad-slot="4186058569"></ins>
         <script>
              (adsbygoogle = window.adsbygoogle || []).push({});
         </script>
@@ -96,12 +111,12 @@
     </div>
 
     {% if config.ADSENSE_ENABLED %}
-    <!-- AdSense Bottom Ad -->
+    <!-- AdSense Bottom Banner Ad -->
     <div class="ad-container ad-bottom">
         <ins class="adsbygoogle"
              style="display:block"
              data-ad-client="{{ config.ADSENSE_CLIENT_ID }}"
-             data-ad-slot="YOUR_BOTTOM_AD_SLOT"
+             data-ad-slot="6571606806"
              data-ad-format="auto"
              data-full-width-responsive="true"></ins>
         <script>
