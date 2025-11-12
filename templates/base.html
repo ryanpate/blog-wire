@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="theme-color" content="#10b981">
 
     {% block meta %}
-    <meta name="description" content="Blog Wire - Trending topics and insights">
-    <meta name="keywords" content="blog, trending, news, insights">
+    <meta name="description" content="Blog Wire - Your premier source for trending topics, insightful analysis, and the latest news. Stay informed with expert content on technology, lifestyle, and more.">
+    <meta name="keywords" content="blog, trending topics, news, insights, technology blog, lifestyle articles, expert analysis, trending news, latest updates">
     <meta name="author" content="{{ config.SITE_AUTHOR }}">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     {% endblock %}
 
     {% if config.GOOGLE_SITE_VERIFICATION %}
@@ -34,8 +36,12 @@
 
     {% block og_meta %}{% endblock %}
 
-    <!-- Preconnect to external domains -->
-    <link rel="preconnect" href="https://pagead2.googlesyndication.com">
+    <!-- Preconnect to external domains for faster loading -->
+    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
+    <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com">
+
+    <!-- Preload critical CSS -->
+    <link rel="preload" href="{{ url_for('static', filename='css/style.css') }}" as="style">
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">

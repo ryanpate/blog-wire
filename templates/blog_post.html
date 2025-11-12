@@ -50,19 +50,40 @@
 {% endblock %}
 
 {% block content %}
-<article class="blog-post">
+<!-- Breadcrumb Navigation -->
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <a href="/" itemprop="item">
+                <span itemprop="name">Home</span>
+            </a>
+            <meta itemprop="position" content="1" />
+        </li>
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <span itemprop="name">{{ post.title }}</span>
+            <meta itemprop="position" content="2" />
+        </li>
+    </ol>
+</nav>
+
+<article class="blog-post" itemscope itemtype="https://schema.org/BlogPosting">
     <header class="post-header">
-        <h1 class="post-title">{{ post.title }}</h1>
+        <h1 class="post-title" itemprop="headline">{{ post.title }}</h1>
 
         <div class="post-meta">
-            <time datetime="{{ post.published_at.isoformat() }}">
+            <time datetime="{{ post.published_at.isoformat() }}" itemprop="datePublished">
                 {{ post.published_at|format_date }}
             </time>
+            {% if post.updated_at %}
+            <meta itemprop="dateModified" content="{{ post.updated_at.isoformat() }}">
+            {% endif %}
             <span class="separator">•</span>
             <span class="reading-time">{{ post.word_count|reading_time }}</span>
             <span class="separator">•</span>
             <span class="view-count">{{ post.view_count }} views</span>
         </div>
+        <meta itemprop="author" content="{{ config.SITE_AUTHOR }}">
+        <meta itemprop="publisher" content="{{ config.BLOG_NAME }}">
     </header>
 
     {% if config.ADSENSE_ENABLED %}
@@ -106,9 +127,37 @@
     </div>
     {% endif %}
 
-    <div class="post-content">
+    <div class="post-content" itemprop="articleBody">
         {{ html_content|safe }}
     </div>
+
+    {% if related_posts %}
+    <!-- Related Posts Section -->
+    <section class="related-posts">
+        <h2>Related Articles You May Like</h2>
+        <div class="related-posts-grid">
+            {% for related in related_posts %}
+            <article class="related-post-card">
+                {% if related.featured_image_url %}
+                <div class="related-post-image">
+                    <a href="{{ url_for('blog_post', slug=related.slug) }}">
+                        <img src="{{ related.featured_image_url }}"
+                             alt="{{ related.title }}"
+                             loading="lazy">
+                    </a>
+                </div>
+                {% endif %}
+                <div class="related-post-content">
+                    <h3>
+                        <a href="{{ url_for('blog_post', slug=related.slug) }}">{{ related.title }}</a>
+                    </h3>
+                    <p class="related-post-excerpt">{{ related.excerpt[:120] }}...</p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
 
     {% if config.ADSENSE_ENABLED %}
     <!-- AdSense Bottom Banner Ad -->
