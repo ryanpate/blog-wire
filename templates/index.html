@@ -1,6 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}{{ config.BLOG_NAME }} - Latest Trending Topics{% endblock %}
+{% block title %}{{ config.BLOG_NAME }} - Latest Trending Topics, News & Expert Insights{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Discover the latest trending topics, expert analysis, and insightful content. Stay informed with Blog Wire's comprehensive coverage of technology, lifestyle, news, and more. Updated daily with fresh perspectives.">
+<meta name="keywords" content="trending topics, latest news, blog articles, technology updates, lifestyle content, expert insights, trending content, current events, blog wire">
+<meta name="author" content="{{ config.SITE_AUTHOR }}">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+{% endblock %}
+
+{% block og_meta %}
+<meta property="og:title" content="{{ config.BLOG_NAME }} - Latest Trending Topics & Expert Insights">
+<meta property="og:description" content="Your premier source for trending topics, expert analysis, and comprehensive content. Stay informed with the latest updates and insights.">
+<meta property="og:url" content="https://{{ config.BLOG_DOMAIN }}/">
+<meta property="og:type" content="website">
+<meta name="twitter:title" content="{{ config.BLOG_NAME }} - Latest Trending Topics">
+<meta name="twitter:description" content="Your premier source for trending topics and expert insights. Updated daily with fresh content.">
+{% endblock %}
 
 {% block head_extra %}
 <!-- Schema.org JSON-LD -->
@@ -18,28 +34,33 @@
 <div class="blog-grid">
     {% if posts.items %}
         {% for post in posts.items %}
-        <article class="blog-card">
+        <article class="blog-card" itemscope itemtype="https://schema.org/BlogPosting">
+            <meta itemprop="mainEntityOfPage" content="{{ url_for('blog_post', slug=post.slug, _external=True) }}">
+            <meta itemprop="author" content="{{ config.SITE_AUTHOR }}">
+            <meta itemprop="datePublished" content="{{ post.published_at.isoformat() }}">
+
             {% if post.featured_image_url %}
             <div class="blog-card-image">
-                <a href="{{ url_for('blog_post', slug=post.slug) }}">
+                <a href="{{ url_for('blog_post', slug=post.slug) }}" itemprop="url">
                     <img src="{{ post.featured_image_url }}"
                          alt="Featured image: {{ post.title }}"
                          loading="lazy"
-                         title="{{ post.title }}">
+                         title="{{ post.title }}"
+                         itemprop="image">
                 </a>
             </div>
             {% endif %}
             <div class="blog-card-content">
                 <h2 class="blog-card-title">
-                    <a href="{{ url_for('blog_post', slug=post.slug) }}">{{ post.title }}</a>
+                    <a href="{{ url_for('blog_post', slug=post.slug) }}" itemprop="headline">{{ post.title }}</a>
                 </h2>
 
                 <div class="blog-card-meta">
-                    <span class="post-date">{{ post.published_at|format_date }}</span>
+                    <time class="post-date" datetime="{{ post.published_at.isoformat() }}">{{ post.published_at|format_date }}</time>
                     <span class="reading-time">{{ post.word_count|reading_time }}</span>
                 </div>
 
-                <p class="blog-card-excerpt">{{ post.excerpt }}</p>
+                <p class="blog-card-excerpt" itemprop="description">{{ post.excerpt }}</p>
 
                 <a href="{{ url_for('blog_post', slug=post.slug) }}" class="read-more">
                     Read More →

@@ -123,6 +123,37 @@ def blog_post(slug):
         extensions=['fenced_code', 'tables', 'nl2br']
     )
 
+    # Get related posts based on shared keywords
+    related_posts = []
+    if post.meta_keywords:
+        keywords = [k.strip().lower() for k in post.meta_keywords.split(',')[:3]]
+        # Find posts with similar keywords
+        for keyword in keywords:
+            related = BlogPost.query.filter(
+                BlogPost.id != post.id,
+                BlogPost.status == 'published',
+                BlogPost.meta_keywords.ilike(f'%{keyword}%')
+            ).order_by(BlogPost.published_at.desc()).limit(3).all()
+            related_posts.extend(related)
+
+        # Remove duplicates and limit to 3
+        seen_ids = set()
+        unique_related = []
+        for p in related_posts:
+            if p.id not in seen_ids:
+                seen_ids.add(p.id)
+                unique_related.append(p)
+                if len(unique_related) >= 3:
+                    break
+        related_posts = unique_related
+
+    # If no related posts found, get recent posts
+    if not related_posts:
+        related_posts = BlogPost.query.filter(
+            BlogPost.id != post.id,
+            BlogPost.status == 'published'
+        ).order_by(BlogPost.published_at.desc()).limit(3).all()
+
     # Generate schema markup for SEO
     article_schema = seo_service.generate_schema_markup(post)
     breadcrumb_schema = seo_service.generate_breadcrumb_schema(post)
@@ -142,7 +173,8 @@ def blog_post(slug):
         'blog_post.html',
         post=post,
         html_content=html_content,
-        schema_markup=json.dumps(schema_markup)
+        schema_markup=json.dumps(schema_markup),
+        related_posts=related_posts
     )
 
 

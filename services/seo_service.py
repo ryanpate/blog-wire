@@ -76,6 +76,7 @@ class SEOService:
             "@context": "https://schema.org",
             "@type": "BlogPosting",
             "headline": blog_post.title,
+            "alternativeHeadline": blog_post.excerpt,
             "description": blog_post.meta_description or blog_post.excerpt,
             "datePublished": blog_post.published_at.isoformat() if blog_post.published_at else None,
             "dateModified": blog_post.updated_at.isoformat() if blog_post.updated_at else blog_post.published_at.isoformat() if blog_post.published_at else None,
@@ -86,16 +87,27 @@ class SEOService:
                 "url": f"https://{Config.BLOG_DOMAIN}",
                 "logo": {
                     "@type": "ImageObject",
-                    "url": f"https://{Config.BLOG_DOMAIN}/static/logo.png"
+                    "url": f"https://{Config.BLOG_DOMAIN}/static/logo.png",
+                    "width": 600,
+                    "height": 60
                 }
             },
             "mainEntityOfPage": {
                 "@type": "WebPage",
-                "@id": f"https://{Config.BLOG_DOMAIN}/blog/{blog_post.slug}"
+                "@id": f"https://{Config.BLOG_DOMAIN}/blog/{blog_post.slug}",
+                "url": f"https://{Config.BLOG_DOMAIN}/blog/{blog_post.slug}"
             },
+            "url": f"https://{Config.BLOG_DOMAIN}/blog/{blog_post.slug}",
             "wordCount": blog_post.word_count,
+            "articleBody": blog_post.excerpt,
             "inLanguage": "en-US",
-            "isAccessibleForFree": True
+            "isAccessibleForFree": True,
+            "isFamilyFriendly": True,
+            "copyrightYear": blog_post.published_at.year if blog_post.published_at else 2025,
+            "copyrightHolder": {
+                "@type": "Organization",
+                "name": Config.BLOG_NAME
+            }
         }
 
         # Add image if available with enhanced properties
@@ -148,7 +160,7 @@ class SEOService:
 
     def generate_website_schema(self):
         """
-        Generate website schema for homepage
+        Generate website schema for homepage with enhanced Organization data
 
         Returns:
             dict: Schema.org WebSite markup
@@ -159,19 +171,34 @@ class SEOService:
             "@context": "https://schema.org",
             "@type": "WebSite",
             "name": Config.BLOG_NAME,
+            "alternateName": "Blog Wire - Trending Content Hub",
             "url": f"https://{Config.BLOG_DOMAIN}",
-            "description": "Trending topics and insights from around the web",
+            "description": "Your premier source for trending topics, insightful analysis, and expert content. Stay informed with the latest news, technology updates, lifestyle articles, and comprehensive guides.",
+            "inLanguage": "en-US",
             "publisher": {
                 "@type": "Organization",
                 "name": Config.BLOG_NAME,
+                "url": f"https://{Config.BLOG_DOMAIN}",
                 "logo": {
                     "@type": "ImageObject",
-                    "url": f"https://{Config.BLOG_DOMAIN}/static/logo.png"
+                    "url": f"https://{Config.BLOG_DOMAIN}/static/logo.png",
+                    "width": 600,
+                    "height": 60
+                },
+                "description": "Delivering quality content on trending topics, technology, lifestyle, and more.",
+                "foundingDate": "2025",
+                "contactPoint": {
+                    "@type": "ContactPoint",
+                    "contactType": "Editorial",
+                    "availableLanguage": ["English"]
                 }
             },
             "potentialAction": {
                 "@type": "SearchAction",
-                "target": f"https://{Config.BLOG_DOMAIN}/?s={{search_term_string}}",
+                "target": {
+                    "@type": "EntryPoint",
+                    "urlTemplate": f"https://{Config.BLOG_DOMAIN}/?s={{search_term_string}}"
+                },
                 "query-input": "required name=search_term_string"
             }
         }
