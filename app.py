@@ -198,6 +198,13 @@ def sitemap():
     sitemap_xml.append('  <priority>1.0</priority>')
     sitemap_xml.append('</url>')
 
+    # Privacy Policy
+    sitemap_xml.append('<url>')
+    sitemap_xml.append(f'  <loc>https://{Config.BLOG_DOMAIN}/privacy-policy</loc>')
+    sitemap_xml.append('  <changefreq>monthly</changefreq>')
+    sitemap_xml.append('  <priority>0.3</priority>')
+    sitemap_xml.append('</url>')
+
     # Blog posts
     for post in posts:
         sitemap_xml.append('<url>')
@@ -229,6 +236,12 @@ Sitemap: https://{Config.BLOG_DOMAIN}/sitemap.xml
 def ads_txt():
     """Ads.txt - redirect to Ezoic ads.txt manager for automatic updates"""
     return redirect(f'https://srv.adstxtmanager.com/19390/{Config.BLOG_DOMAIN}', code=301)
+
+
+@app.route('/privacy-policy')
+def privacy_policy():
+    """Privacy Policy page for ad compliance"""
+    return render_template('privacy_policy.html')
 
 
 @app.route('/google<verification_code>.html')
