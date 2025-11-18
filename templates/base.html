@@ -36,6 +36,17 @@
 
     {% block og_meta %}{% endblock %}
 
+    <!-- Ezoic Privacy/Consent Management -->
+    <script src="https://cmp.gatekeeperconsent.com/min.js" data-cfasync="false"></script>
+    <script src="https://the.gatekeeperconsent.com/cmp.min.js" data-cfasync="false"></script>
+
+    <!-- Ezoic Header Script -->
+    <script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
+    <script>
+        window.ezstandalone = window.ezstandalone || {};
+        ezstandalone.cmd = ezstandalone.cmd || [];
+    </script>
+
     <!-- Preconnect to external domains for faster loading -->
     <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
     <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com">

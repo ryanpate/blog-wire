@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, abort
+from flask import Flask, render_template, jsonify, request, abort, redirect
 from flask_migrate import Migrate
 import logging
 import markdown
@@ -227,10 +227,8 @@ Sitemap: https://{Config.BLOG_DOMAIN}/sitemap.xml
 
 @app.route('/ads.txt')
 def ads_txt():
-    """Ads.txt for Google AdSense verification"""
-    ads_txt = """google.com, pub-5523870768931777, DIRECT, f08c47fec0942fa0
-"""
-    return ads_txt, 200, {'Content-Type': 'text/plain'}
+    """Ads.txt - redirect to Ezoic ads.txt manager for automatic updates"""
+    return redirect(f'https://srv.adstxtmanager.com/19390/{Config.BLOG_DOMAIN}', code=301)
 
 
 @app.route('/google<verification_code>.html')
