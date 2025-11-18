@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}About Us - {{ config.BLOG_NAME }}{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Learn about Blog Wire - your source for trending topics, insights, and the latest news. Discover our mission to deliver quality content on technology, lifestyle, and more.">
+<meta name="robots" content="index, follow">
+{% endblock %}
+
+{% block og_meta %}
+<meta property="og:title" content="About Us - {{ config.BLOG_NAME }}">
+<meta property="og:description" content="Learn about Blog Wire - your source for trending topics, insights, and the latest news.">
+<meta property="og:url" content="https://{{ config.BLOG_DOMAIN }}/about">
+<meta property="og:type" content="website">
+{% endblock %}
+
+{% block content %}
+<article class="about-page">
+    <header class="post-header">
+        <h1>About {{ config.BLOG_NAME }}</h1>
+    </header>
+
+    <div class="post-content">
+        <h2>Our Mission</h2>
+        <p>{{ config.BLOG_NAME }} is dedicated to bringing you comprehensive, well-researched content on the topics that matter most. We cover a wide range of subjects including technology, lifestyle, health, entertainment, finance, and current events to keep you informed and engaged.</p>
+
+        <h2>What We Do</h2>
+        <p>We leverage cutting-edge artificial intelligence technology to create in-depth articles that explore trending topics and provide valuable insights. Our content is designed to be:</p>
+        <ul>
+            <li><strong>Informative:</strong> We dive deep into topics to give you comprehensive coverage</li>
+            <li><strong>Timely:</strong> We track trending topics to bring you relevant content</li>
+            <li><strong>Accessible:</strong> We write in clear, easy-to-understand language</li>
+            <li><strong>Engaging:</strong> We craft articles that are interesting to read</li>
+        </ul>
+
+        <h2>AI-Powered Content</h2>
+        <p>{{ config.BLOG_NAME }} utilizes advanced AI technology to generate our articles. This allows us to:</p>
+        <ul>
+            <li>Cover a broad range of topics efficiently</li>
+            <li>Publish content consistently</li>
+            <li>Explore subjects from multiple angles</li>
+            <li>Stay current with trending topics</li>
+        </ul>
+        <p>We believe in transparency, which is why we openly disclose that our content is AI-generated. While AI helps us create content at scale, we are committed to providing accurate and helpful information to our readers.</p>
+
+        <h2>Our Values</h2>
+        <div class="values-grid">
+            <div class="value-item">
+                <h3>Quality</h3>
+                <p>We strive to produce well-written, informative content that provides real value to our readers.</p>
+            </div>
+            <div class="value-item">
+                <h3>Transparency</h3>
+                <p>We are open about our use of AI technology and how we create our content.</p>
+            </div>
+            <div class="value-item">
+                <h3>Accessibility</h3>
+                <p>We aim to make information accessible to everyone through clear, engaging writing.</p>
+            </div>
+            <div class="value-item">
+                <h3>Innovation</h3>
+                <p>We embrace new technologies to improve how we deliver content to our audience.</p>
+            </div>
+        </div>
+
+        <h2>Topics We Cover</h2>
+        <p>Our articles span a diverse range of categories, including:</p>
+        <ul>
+            <li><strong>Technology:</strong> Latest tech news, gadgets, software, and digital trends</li>
+            <li><strong>Lifestyle:</strong> Health, wellness, personal development, and daily living</li>
+            <li><strong>Entertainment:</strong> Movies, TV shows, music, gaming, and pop culture</li>
+            <li><strong>Finance:</strong> Personal finance, investing, cryptocurrency, and economic news</li>
+            <li><strong>Science:</strong> Scientific discoveries, research, and innovations</li>
+            <li><strong>Travel:</strong> Destinations, travel tips, and adventure guides</li>
+            <li><strong>Food:</strong> Recipes, restaurants, nutrition, and culinary trends</li>
+        </ul>
+
+        <h2>Important Disclaimer</h2>
+        <p>While we work to provide accurate and helpful information, please note:</p>
+        <ul>
+            <li>Our content is for informational and entertainment purposes only</li>
+            <li>Articles should not be considered professional advice (medical, legal, financial, etc.)</li>
+            <li>We recommend consulting qualified professionals for important decisions</li>
+            <li>Information should be verified with authoritative sources when needed</li>
+        </ul>
+
+        <h2>Connect With Us</h2>
+        <p>We value our readers and welcome your feedback. If you have questions, suggestions, or would like to get in touch, please visit our <a href="/contact">Contact page</a>.</p>
+
+        <p>Thank you for visiting {{ config.BLOG_NAME }}. We hope you find our content informative and enjoyable!</p>
+    </div>
+</article>
+
+<style>
+.about-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.about-page .post-header {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 20px;
+}
+
+.about-page h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.about-page .post-content h2 {
+    font-size: 1.5rem;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.about-page .post-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    color: #10b981;
+}
+
+.about-page .post-content p {
+    margin-bottom: 15px;
+    line-height: 1.7;
+}
+
+.about-page .post-content ul {
+    margin-bottom: 15px;
+    padding-left: 30px;
+}
+
+.about-page .post-content li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.about-page .post-content a {
+    color: #10b981;
+    text-decoration: none;
+}
+
+.about-page .post-content a:hover {
+    text-decoration: underline;
+}
+
+.values-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.value-item {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #10b981;
+}
+
+.value-item h3 {
+    margin-top: 0;
+}
+
+.value-item p {
+    margin-bottom: 0;
+    font-size: 0.95rem;
+}
+</style>
+{% endblock %}

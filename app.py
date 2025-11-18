@@ -205,6 +205,27 @@ def sitemap():
     sitemap_xml.append('  <priority>0.3</priority>')
     sitemap_xml.append('</url>')
 
+    # Terms of Service
+    sitemap_xml.append('<url>')
+    sitemap_xml.append(f'  <loc>https://{Config.BLOG_DOMAIN}/terms</loc>')
+    sitemap_xml.append('  <changefreq>monthly</changefreq>')
+    sitemap_xml.append('  <priority>0.3</priority>')
+    sitemap_xml.append('</url>')
+
+    # About Us
+    sitemap_xml.append('<url>')
+    sitemap_xml.append(f'  <loc>https://{Config.BLOG_DOMAIN}/about</loc>')
+    sitemap_xml.append('  <changefreq>monthly</changefreq>')
+    sitemap_xml.append('  <priority>0.5</priority>')
+    sitemap_xml.append('</url>')
+
+    # Contact
+    sitemap_xml.append('<url>')
+    sitemap_xml.append(f'  <loc>https://{Config.BLOG_DOMAIN}/contact</loc>')
+    sitemap_xml.append('  <changefreq>monthly</changefreq>')
+    sitemap_xml.append('  <priority>0.5</priority>')
+    sitemap_xml.append('</url>')
+
     # Blog posts
     for post in posts:
         sitemap_xml.append('<url>')
@@ -242,6 +263,24 @@ def ads_txt():
 def privacy_policy():
     """Privacy Policy page for ad compliance"""
     return render_template('privacy_policy.html')
+
+
+@app.route('/terms')
+def terms():
+    """Terms of Service page"""
+    return render_template('terms.html')
+
+
+@app.route('/about')
+def about():
+    """About Us page"""
+    return render_template('about.html')
+
+
+@app.route('/contact')
+def contact():
+    """Contact page"""
+    return render_template('contact.html')
 
 
 @app.route('/google<verification_code>.html')
